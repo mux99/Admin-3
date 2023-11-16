@@ -1,7 +1,7 @@
 $CSVFile = "C:\Scripts\create-users\create.csv"
 $CSVData = Import-CSV -Path $CSVFile -Delimiter ";" -Encoding UTF8
 
-# Fonction pour générer un mot de passe excluant certains caractères spéciaux
+# Generate password with special characters and length = 12
 function Generate-RandomPassword {
     param (
         [int]$length
@@ -14,22 +14,22 @@ function Generate-RandomPassword {
 
     $password = ''
 
-    # Ajouter au moins une majuscule, une minuscule, un chiffre et un caractère spécial
+    # password requirements
     $password += $upperCaseChars | Get-Random -Count 1
     $password += $lowerCaseChars | Get-Random -Count 1
     $password += $numericChars | Get-Random -Count 1
     $password += $specialChars | Get-Random -Count 1
 
-    # Générer le reste du mot de passe
+    # Generate other characters at the end of the password
     $remainingLength = $length - 4
     $validChars = $upperCaseChars + $lowerCaseChars + $numericChars + $specialChars
     $random = 1..$remainingLength | ForEach-Object { Get-Random -Maximum $validChars.Length }
     $password += -join ($random | ForEach-Object { $validChars[$_] })
 
-    # Mélanger le mot de passe pour plus de sécurité
+    # Mix characters
     $password = -join ($password.ToCharArray() | Get-Random -Count $password.Length)
 
-    # Assurer que la longueur est exacte
+    # Make sur of the length
     $password = $password.Substring(0, $length)
 
     return $password
@@ -43,7 +43,7 @@ Foreach($Utilisateur in $CSVData){
     $UtilisateurEmail = "$UtilisateurLogin@mycompany.local"
     $UtilisateurFonction = $Utilisateur.Fonction
 
-    # Vérifier la présence de l'utilisateur dans l'AD
+    # User exist in the AD ?
     if (Get-ADUser -Filter {SamAccountName -eq $UtilisateurLogin}) {
         Write-Warning "L'identifiant $UtilisateurLogin existe déjà dans l'AD"
     }
@@ -56,9 +56,11 @@ Foreach($Utilisateur in $CSVData){
                     -GivenName $UtilisateurPrenom `
                     -Surname $UtilisateurNom `
                     -SamAccountName $UtilisateurLogin `
+                    # login
                     -UserPrincipalName "$UtilisateurLogin@mycompany.local" `
                     -EmailAddress $UtilisateurEmail `
                     -Title $UtilisateurFonction `
+                    # Path to the OU
                     -Path "OU=utilisateurs,DC=mycompany,DC=local" `
                     -AccountPassword (ConvertTo-SecureString $UtilisateurMotDePasse -AsPlainText -Force) `
                     -ChangePasswordAtLogon $true `
@@ -68,5 +70,5 @@ Foreach($Utilisateur in $CSVData){
     }
 }
 
-# Exporter le CSV mis à jour
+# Export CSV
 $CSVData | Export-Csv -Path $CSVFile -Delimiter ";" -Encoding UTF8 -NoTypeInformation

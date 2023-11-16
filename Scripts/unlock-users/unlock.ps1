@@ -1,24 +1,21 @@
-# Chemin du fichier CSV
+# Path to CSV
 $CSVFile = "C:\Scripts\unlock-users\unlock.csv"
 
-# Importer les données du fichier CSV
+# Import CSV data
 $CSVData = Import-CSV -Path $CSVFile -Delimiter ";" -Encoding UTF8
 
-# Parcourir chaque utilisateur du CSV
 foreach ($Utilisateur in $CSVData) {
     $UtilisateurLogin = $Utilisateur.NomUtilisateur
 
-    # Obtenir l'utilisateur et son état de verrouillage
+    # Get user
     $utilisateur = Get-ADUser -Filter {SamAccountName -eq $UtilisateurLogin} -Properties BadPwdCount,LockedOut
 
-    # Vérifier si le compte est verrouillé
+    # Verify account is locked
     if ($utilisateur.LockedOut -and $utilisateur.BadPwdCount -ge 3) {
-        # Afficher un message
         Write-Output "Le compte utilisateur $UtilisateurLogin est actuellement verrouillé."
 
-        # Débloquer le compte
+        # unlock account
         Unlock-ADAccount -Identity $UtilisateurLogin
-
         Write-Output "Le compte utilisateur $UtilisateurLogin a été débloqué."
     } else {
         Write-Output "Le compte utilisateur $UtilisateurLogin n'est pas verrouillé ou n'a pas dépassé le nombre d'échecs autorisé."
