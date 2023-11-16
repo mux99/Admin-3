@@ -1,5 +1,5 @@
 # Path to CSV
-$CSVFile = "C:\Scripts\modify users\modify.csv"
+$CSVFile = "C:\Scripts\modify-users\modify.csv"
 
 # Import data from CSV
 $CSVData = Import-CSV -Path $CSVFile -Delimiter ";" -Encoding UTF8
